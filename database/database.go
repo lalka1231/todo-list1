@@ -4,33 +4,43 @@ import (
     "fmt"
     "log"
     "os"
-    
+
     "github.com/lalka1231/todo-list1/models"
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
+    "gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
+type Dbinstance struct {
+    Db *gorm.DB
+}
+
+var DB Dbinstance
 
 func ConnectDB() {
-    var err error
+    dsn := fmt.Sprintf(
+        "host=db user=%s password=%s dbname=%s port=5432 sslmode=disable TimeZone=Europe/Moscow",
+        os.Getenv("DB_USER"),
+        os.Getenv("DB_PASSWORD"),
+        os.Getenv("DB_NAME"),
+    )
     
-    dbHost := os.Getenv("DB_HOST")
-    dbPort := os.Getenv("DB_PORT")
-    dbUser := os.Getenv("DB_USER")
-    dbPassword := os.Getenv("DB_PASSWORD")
-    dbName := os.Getenv("DB_NAME")
-    
-    dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-        dbHost, dbUser, dbPassword, dbName, dbPort)
-    
-    DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+        Logger: logger.Default.LogMode(logger.Info),
+    })
+
     if err != nil {
-        log.Fatal("Failed to connect to database:", err)
+        log.Fatal("Failed to connect to database.\n", err)
+        os.Exit(1)
     }
-    
-    log.Println("Database connected successfully")
-    
-    DB.AutoMigrate(&models.Task{})
-    log.Println("Database migrated")
+
+    log.Println("connected")
+    db.Logger = logger.Default.LogMode(logger.Info)
+
+    log.Println("running migration")
+    db.AutoMigrate(&models.Task{})
+
+    DB = Dbinstance{
+        Db: db,
+    }
 }

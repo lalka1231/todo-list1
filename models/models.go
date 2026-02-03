@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Task struct {
     gorm.Model
-    Description string `json:"description" gorm:"type:text"`
-    Note        string `json:"note" gorm:"type:text"`
+    ID          uint   `json:"id" gorm:"primaryKey"`
+    Description string `json:"description" gorm:"text"`
+    Note        string `json:"note" gorm:"text"`
 }
